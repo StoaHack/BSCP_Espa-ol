@@ -388,8 +388,8 @@ nc3xtl7hr3fiq7ljojoc
 
 ```
 
-
-
+## Blind SQL
+Muchos casos de inyección SQL son vulnerabilidades ciegas. Esto significa que **la aplicación no devuelve los resultados de la consulta SQL ** ni los detalles de ningún error de la base de datos en sus respuestas. Las vulnerabilidades ciegas aún pueden aprovecharse para acceder a datos no autorizados, pero las técnicas involucradas son generalmente más complicadas y difíciles de realizar. Se pueden utilizar las siguientes técnicas para explotar vulnerabilidades de inyección SQL ciega, según la naturaleza de la vulnerabilidad y la base de datos involucrada: Puede cambiar la lógica de la consulta para desencadenar una diferencia detectable en la respuesta de la aplicación dependiendo de la verdad de una única condición. Esto podría implicar **inyectar una nueva condición en alguna lógica booleana o desencadenar condicionalmente un error como una división por cero**. Puede** activar condicionalmente un retraso en el procesamiento de la consulta.** Esto le permite** inferir la veracidad de la condición en función del tiempo que tarda la aplicación en responder.** Puede **desencadenar una interacción de red fuera de banda mediante técnicas OAST**. Esta técnica **es extremadamente poderosa y funciona en situaciones donde las otras técnicas no funcionan.** A menudo, **puede filtrar datos directamente a través del canal fuera de banda. P**or ejemplo, puede colocar los datos en una búsqueda de DNS para un dominio que controle.
 
 Con UNION
 1. Determinar la cantidas de elementos *Verifica la sintaxis*
