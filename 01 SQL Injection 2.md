@@ -178,8 +178,41 @@ inicio en 0 la mia
 19 6
 20 n
 
+```
 
+#Inyeccion Basada en Errores
+La inyección SQL basada en errores se refiere a casos en los que se pueden usar mensajes de error para extraer o inferir datos confidenciales de la base de datos, incluso en contextos ciegos. Las posibilidades dependen de la configuración de la base de datos y de los tipos de errores que se pueden generar:
 
+- Generando expresiones que devuelvan verdadero o falso para obtener más información, los mismo de 1=1 ó 1=2
+- Generando errores para ibservar si cuento con el control de los errores o generar mensaje que puedan describir la BD, ejemplo 1/0
+```
+xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a
+xyz' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE 'a' END)='a
+
+Sintasix de case en SQL
+
+CASE
+    WHEN condition1 THEN result1
+    WHEN condition2 THEN result2
+    WHEN conditionN THEN resultN
+    ELSE result
+END;
+
+SELECT CustomerName, City, Country
+FROM Customers
+ORDER BY
+(CASE
+    WHEN City IS NULL THEN Country
+    ELSE City
+END);
+
+SELECT OrderID, Quantity,
+CASE
+    WHEN Quantity > 30 THEN 'The quantity is greater than 30'
+    WHEN Quantity = 30 THEN 'The quantity is 30'
+    ELSE 'The quantity is under 30'
+END AS QuantityText
+FROM OrderDetails;
 ```
 
 # Hola
