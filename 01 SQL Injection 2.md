@@ -342,6 +342,8 @@ Y estas no funcionaron:
 SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx';SELECT pg_sleep(10);--''
 
 el ; Indica que puede haber multiples consultas que puede estar filtradas o estar configuradas para que solo haya una consulta y no multiples
+CTRL + U para conertir en URL encode
+CTRL + Shift + U convertir a notación ASCCO
 
 ```
 
