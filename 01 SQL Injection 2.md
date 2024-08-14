@@ -346,7 +346,12 @@ CTRL + U para conertir en URL encode
 CTRL + Shift + U convertir a notación ASCCO
 
 ```
+## Laboratorio 2
+```
+Tabla user usuarname password
+obtener la contraseña administrador
 
+```
 # Hola
 ## HOLA
 ### HOLA
