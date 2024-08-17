@@ -110,4 +110,16 @@ al igual que el tiempo de respuesta
 Pero la diferencia radica en el mensaje
 
 De ahi en fuera se hace igual que el anterior solo que con el filtro inversa
+
+Solución oficial
+
+Es diferente
+1.-Con Proxy Captura la consulta
+2.- La envia a intruder y configuras sniper/lista simple y cargas la contraseñas
+3.- [Lo importante] en la pestaña de settings de intruder en la sección de** Grep-Extract > Add > fecth response (hace la consulta y muestra el response) > seleccionas con el mouse la entrada y todos los parametros del add se llenan, das clicl en ok**
+4.- Ahora clic en el ataque y notaras que tienes una nueva columna con lo que seleccionaste
+5.- Hacer lo mismo con el parametro de contraseña
+
+Agenda
+football
 ```
