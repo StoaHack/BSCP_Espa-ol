@@ -151,6 +151,5 @@ Aqui si necesite leer la documentación
     Solicitud tres:
         Posición 1 = Tercera carga útil del Conjunto 1.
         Posición 2 = Tercera carga útil del Conjunto 2.
-
-
 ```
+**Más info sobre los ataques de intruder: https://portswigger.net/burp/documentation/desktop/tools/intruder/configure-attack/attack-types**
