@@ -72,7 +72,7 @@ Mientras intenta hacer una página de inicio de sesión de fuerza bruta, debe pr
 <br><br>
 > Tiempos de respuesta : Si la mayoría de las solicitudes se manejaron con un tiempo de respuesta similar, cualquiera que se desviara de esto sugiere que algo diferente estaba sucediendo entre bastidores. Esta es otra indicación de que el nombre de usuario adivinado podría ser correcto. Por ejemplo, un sitio web sólo podría comprobar si la contraseña es correcta si el nombre de usuario es válido. Este paso adicional podría causar un ligero aumento en el tiempo de respuesta. Esto puede ser sutil, pero un atacante puede hacer este retraso más obvio al introducir una contraseña excesivamente larga que el sitio web tarda notablemente más tiempo en manejar.
 
-#### Laboratorio
+#### Laboratorio Enumeró el nombre de usuario a través del mesnaje de respuesta
 
 Resumen
 
@@ -92,7 +92,7 @@ Para resolver el laboratorio, enumera un nombre de usuario válido, la contrase�
 Respuesta oficial
 Es lo mismo pero con otras palabras jajaja
 ```
-#### Laboratorio
+#### Laboratorio Enumeró el nombre de usuario a través de un cambio sutil
 Este laboratorio es sutilmente vulnerable a la enumeración de nombres de usuario y a los ataques de la fuerza bruta de contraseña. Tiene una cuenta con un nombre de usuario y contraseña predecibles, que se puede encontrar en las siguientes listas de palabras:
 
     Nombres de usuario candidatos
@@ -118,8 +118,39 @@ Es diferente
 2.- La envia a intruder y configuras sniper/lista simple y cargas la contraseñas
 3.- [Lo importante] en la pestaña de settings de intruder en la sección de** Grep-Extract > Add > fecth response (hace la consulta y muestra el response) > seleccionas con el mouse la entrada y todos los parametros del add se llenan, das clicl en ok**
 4.- Ahora clic en el ataque y notaras que tienes una nueva columna con lo que seleccionaste
-5.- Hacer lo mismo con el parametro de contraseña
+5.- Hacer lo mismo con el parametro de contraseña (lo de grep extract aqui es opcional ya que el mensaje de error sera el mismo y el codigo de estado revelará cual es la contraseña correcta)
 
 Agenda
 football
+```
+### Laboratorio Enumeró el nombre de usuario a través del momento de la respuesta
+Este laboratorio es vulnerable a la enumeración de nombre de usuario usando sus tiempos de respuesta. Para resolver el laboratorio, enumera un nombre de usuario válido, la contraseña de este usuario, luego accede a la página de su cuenta.
+
+    Sus credenciales: wiener:peter
+    Nombres de usuario candidatos
+    Contraseñas de candidatos
+
+> X-Forwarded-For: 203.0.113.111  este header ayuda para evadir la portección de ataques de fuerza bruta a traves de una IP
+```
+Aqui si necesite leer la documentación
+
+1.- Estaba viendo el comportamiento y cuanto tardaba la consulta si le cambiaba el nombre del usuario hasta que aparecio que estaba bloqueado por multiples intentos de login y tuve que investigar, además de leer el hint el cual menciona que hay un registro de IP, que usualmente se hace con el header X-Forwarded-For:IP
+2.- Despues el deber ser (porque lei) es ver el comportamiento cambiando la longitud de la contraseña, con el usuario real vs con un usuario falso, si el usuario es verdadero y la contraseña es incorrecta con una gran longitud el tiempo de respuesta es bastante grande, el tiempo de repsuesta es proporcional al tamaño de la contraseña
+3.- Sabiendo lo anterior ya se puede proceder al ataque con intruder pero ahora se utilizará Pithcfork, que permite que cada entrada tenga un valor diferente
+
+
+
+    Solicitud uno:
+        Posición 1 = Primera carga útil del Conjunto 1.
+        Posición 2 = Primera carga útil del Conjunto 2.
+
+    Solicitud dos:
+        Posición 1 = Segunda carga útil del Conjunto 1.
+        Posición 2 = Segunda carga útil del Conjunto 2.
+
+    Solicitud tres:
+        Posición 1 = Tercera carga útil del Conjunto 1.
+        Posición 2 = Tercera carga útil del Conjunto 2.
+
+
 ```
