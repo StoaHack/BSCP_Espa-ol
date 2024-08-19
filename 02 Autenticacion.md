@@ -123,7 +123,7 @@ Es diferente
 Agenda
 football
 ```
-### Laboratorio Enumeró el nombre de usuario a través del momento de la respuesta
+#### Laboratorio Enumeró el nombre de usuario a través del momento de la respuesta
 Este laboratorio es vulnerable a la enumeración de nombre de usuario usando sus tiempos de respuesta. Para resolver el laboratorio, enumera un nombre de usuario válido, la contraseña de este usuario, luego accede a la página de su cuenta.
 
     Sus credenciales: wiener:peter
@@ -153,3 +153,50 @@ Aqui si necesite leer la documentación
         Posición 2 = Tercera carga útil del Conjunto 2.
 ```
 **Más info sobre los ataques de intruder: https://portswigger.net/burp/documentation/desktop/tools/intruder/configure-attack/attack-types**
+
+### Protección de fuerza bruta defectuosa
+Es muy probable que un ataque de fuerza bruta implique muchas conjeturas fallidas antes de que el atacante comprometa con éxito una cuenta. Lógicamente, la protección de la fuerza bruta gira en torno a tratar de hacerlo lo más complicado posible para automatizar el proceso y ralentizar el ritmo al que un atacante puede intentar iniciar sesión. Las dos formas más comunes de prevenir los ataques con fuerza bruta son:
+
+- Bloquear la cuenta que el usuario remoto está tratando de acceder si hace demasiados intentos de inicio de sesión fallidos
+- Bloquear la dirección IP del usuario remoto si hace demasiados intentos de inicio de sesión en rápida sucesión
+
+Ambos enfoques ofrecen diversos grados de protección, pero ninguno de los dos es invulnerable, especialmente si se implementa usando lógica defectiva.
+
+Por ejemplo, a veces puede encontrar que su IP está bloqueada si no entra en sesión demasiadas veces. En algunas implementaciones, el contador para el número de intentos fallidos se restablece si el propietario IP inicia sesión con éxito. Esto significa que un atacante simplemente tendría que iniciar sesión en su propia cuenta cada pocos intentos para evitar que este límite se alcance alguna vez.
+
+En este caso, simplemente incluir sus propias credenciales de inicio de sesión a intervalos regulares a través de la lista de palabras es suficiente para hacer esta defensa prácticamente inútil.
+
+> En resumen, la protección de fuerza bruta bloqueando por IP puede tener el defecto si se inicia sesión de vez en cuando ya que podria resetear el contador
+>
+#### Laboratorio: Protección contra la fuerza bruta rota, bloque de IP
+ Este laboratorio es vulnerable debido a un fallo lógico en su protección contra la fuerza bruta de contraseñas. Para resolver el problema, fuerza bruta la contraseña de la víctima, luego inicia sesión y accede a la página de su cuenta.
+
+    Tus credenciales: wiener:peter
+    Nombre de usuario de la víctima: carlos
+    Contraseñas candidatas
+ 
+```
+Es posible que los usuarios avanzados quieran resolver esta práctica de laboratorio utilizando una macro o la extensión Turbo Intruder. Sin embargo, es posible resolver la práctica de laboratorio sin utilizar estas funciones avanzadas.
+
+wiener:peter => pasa
+
+wiener:petesadasdr > incorrect password
+
+3 intentos y bloquea
+
+La idea la tenia es decir con pitchfork
+
+la lista de usuarios seria con wiener y carlos solo esos usuarios con la misma cantidad de contraseñas de tal manera que considan la contraseña de wiener con peter
+Aquí el ejemplo
+wiener => peter
+carlos => pass1
+wiener => peter
+carlos => pass2
+
+EL problema que hace consultas simultaneas por lo que se bloquea de manera inmediata (no sabia que se podia limitar), se limita con
+
+BURP SUITE > INTRUDER > PESTAÑA - RESOURCE POOL > create new resouce pool > le pones que maximo 1
+
+Listo ya no bloquea, para encontrar la contraseña rapido, busqueda inversa de wiener y estatus 300 y listo aparece
+
+```
