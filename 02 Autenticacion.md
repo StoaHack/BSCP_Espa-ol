@@ -200,3 +200,48 @@ BURP SUITE > INTRUDER > PESTAÑA - RESOURCE POOL > create new resouce pool > le 
 Listo ya no bloquea, para encontrar la contraseña rapido, busqueda inversa de wiener y estatus 300 y listo aparece
 
 ```
+### Bloqueo de usuarios / Account locking
+
+Una de las acciones que los sitios web utilizan para prevenir los actaques de fuerza brutas es bloquear el usuario si ciertos criterios se cimplen, usualmente un numero establecido de intentos fallidos. 
+AL igual que con los errores de inicio de sesión, las respuesta del servidor indican que una cuenta está bloqueada tambien pueden ayudar a un atacante a enumerar usuarios
+
+Bloquear usuarios ofrece un cierta protección en contra de los ataques de fuerza bruta a usuarios objetivo. sin mebago, esta prevención falla de manera adecuada en prevenir los ataques de fuerza bruta
+en caso de un que un atacante solo es intentado de ganar acceso a cualquier cuenta aleatoria  que quiera.
+
+
+1.- Establecer una lista de nombres de usuario candidatos que probablemente sean válidos. Esto puede hacerse mediante una enumeración de nombres de usuario o simplemente basándose en una lista de nombres de usuario comunes.
+2.- Decide una lista muy reducida de contraseñas que creas que al menos un usuario puede tener. Lo más importante es que el número de contraseñas que elijas no supere el número de intentos de inicio de sesión permitidos. Por ejemplo, si has calculado que el límite es de 3 intentos, tienes que elegir un máximo de 3 contraseñas.
+3.- Utilizando una herramienta como Burp Intruder, pruebe cada una de las contraseñas seleccionadas con cada uno de los nombres de usuario candidatos. De esta forma, podrá intentar la fuerza bruta en todas las cuentas sin activar el bloqueo de cuentas. Sólo es necesario que un único usuario utilice una de las tres contraseñas para comprometer una cuenta.
+
+El bloqueo de cuentas tampoco protege contra los ataques de relleno de credenciales. Esto implica el uso de un diccionario masivo de pares nombre de usuario:contraseña
+ compuestos por credenciales de acceso auténticas robadas en filtraciones de datos. 
+El relleno de credenciales se basa en el hecho de que mucha gente reutiliza el mismo nombre de usuario y contraseña en varios sitios web y, por tanto, existe la de que algunas de las credenciales comprometidas en el diccionario sean también válidas en el sitio web objetivo. 
+también sean válidas en el sitio web objetivo. El bloqueo de cuentas no protege contra el relleno de credenciales porque cada nombre de usuario sólo se una sola vez. El relleno de credenciales es particularmente peligroso porque  a veces puede resultar en que el atacante comprometa muchas cuentas 
+cuentas diferentes con un solo ataque automatizado.
+
+> Es decir que en un brecha de seguridad el usuario no haya actualizado sus contraseñas por lo que es vulnerable su cuenta
+
+#### Laboratorio Listado de nombre de usuario vía bloqueo de cuenta
+
+Este laboratorio es vulnerable a la enumeración de nombres de usuario. Utiliza bloqueo de cuentas, pero esto contiene un fallo lógico. Para resolver el laboratorio, enumera un nombre de usuario válido, la contraseña de este usuario, luego accede a la página de su cuenta.
+
+    Nombres de usuario candidatos
+    Contraseñas de candidatos
+```
+La teoria poner 4 contraseeñas asi lo bloqueara por lo que se puede conocer cual es el usuario bueno
+si ponemos 3 no lo bloquea pero como sabemos que accede > si accede envia otro mensaje
+ hay un fallo logico
+
+Hacemos el deber ser aunque no lo proceso del todo o no me gusta es decir,
+probamos todos los nombres con las primeras 3 contraseñas de la lista si alguna cuenta tiene una respuesta diferente al del error ya la hicimos
+
+No funciono
+Mejor lo hice como lo habia planeado de 4 contraseñas asi lo habre bloqeuado jejeje
+SI lo encontre así con el user / password
+am / qwerty
+
+SELECT ID FROM USERS WHERE USERNAME= 'USER' AND PASSWORD = 'PASS'
+qwerty' AND 1=1--
+SELECT ID FROM USERS WHERE USERNAME= 'am' AND PASSWORD = 'qwerty' AND 1=1--''
+
+```
