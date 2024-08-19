@@ -244,4 +244,23 @@ SELECT ID FROM USERS WHERE USERNAME= 'USER' AND PASSWORD = 'PASS'
 qwerty' AND 1=1--
 SELECT ID FROM USERS WHERE USERNAME= 'am' AND PASSWORD = 'qwerty' AND 1=1--''
 
+SELECT ID FROM USERS WHERE USERNAME= 'USER' AND PASSWORD = 'PASS' AND TRYS<=3
+
+CREATE STORE PROCEDURE LOGIN (USER, PASS)
+COUNT INT 0
+IF EXISTS SELECT ID WHERE USERNAME = USER
+ IF EXISTS SELECT ID WHERE USERNAME = USER  AND FLAG=FALSE
+  IF EXISTS SELECT ID WHERE USERNAME = USER AND PASSWORD=PASS AND COUNT<=3
+  RETURN PASS
+ ELSE
+  COUNT++
+  IF COUNT >= 3
+  FLAG = TRUE
+ELSE
+RETURN 0
+
+la falla logica es que apesar de que tuviera el "bloqueo" te iba a dejar pasar siempre y cuando tuvieras la contraseña correcta
+
+el oficial hace en el cluster bomb un tipo de ataque null payload en el paramtro de la contraseña
+
 ```
